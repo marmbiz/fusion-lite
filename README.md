@@ -1,14 +1,17 @@
 # Fusion Lite
 
-Budget multi-model panels through OpenRouter, judged locally by the CLI subscriptions you already have.
+Let the subscriptions you already have do the heavy lifting.
 
-Fusion Lite is for people who use tools like Codex CLI or Claude Code and want more model diversity without moving the final judgment layer fully into a hosted fusion product.
+Fusion Lite is a local fusion-style orchestrator for people who already use tools like Codex CLI, Claude Code, Gemini, Kimi, Grok, or OpenRouter and want those existing subscriptions to work together as a model panel.
+
+OpenRouter can add cheap diversity, but it is not the center of the architecture. The center is your local stack: the CLIs and API access you already pay for, combined with a judge that turns separate model outputs into a structured Fusion-style report.
 
 ## What It Does
 
 - Calls several independent panel models in parallel.
-- Uses OpenRouter budget models for cheap diversity.
-- Uses a local CLI model such as Claude or Codex as the judge/final synthesis layer.
+- Uses local CLI subscriptions as panel members or judges.
+- Uses OpenRouter budget models as optional cheap diversity.
+- Uses a judge model such as Codex, Claude, Gemini, Kimi, or Grok for analysis and final synthesis.
 - Captures command, stdout, stderr, status, elapsed time, and compact terminal error details for local CLI adapters.
 - Saves the raw panel responses, judge prompt, judge JSON, analysis markdown, final answer, Fusion-style report, and metadata for each run.
 - Summarizes panel success, latency, token usage, and known API cost so runs can be compared on quality, speed, and price.

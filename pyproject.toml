@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 [project]
 name = "fusion-lite"
 version = "0.1.1"
-description = "Budget multi-model panels through OpenRouter, judged locally by CLI subscriptions."
+description = "Local fusion-style multi-model panels that let existing CLI and API subscriptions do the heavy lifting."
 readme = "README.md"
 requires-python = ">=3.10"
 license = { file = "LICENSE" }
