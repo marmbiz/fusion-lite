@@ -47,6 +47,8 @@ Create a local `.env` file or export environment variables in your shell:
 cp .env.example .env
 ```
 
+`.env` loading is intentionally allowlisted to Fusion/provider variables. Export unusual local CLI environment settings in your shell instead of relying on `.env`.
+
 Minimum useful setup:
 
 ```bash
@@ -238,13 +240,13 @@ FUSION_LITE_RUNS_DIR=./runs fusion-lite "prompt"
 
 Supported adapters:
 
-- `openrouter_chat`: OpenRouter Chat Completions, enabled by `OPENROUTER_API_KEY`.
+- `openrouter_chat`: OpenRouter Chat Completions on the fixed official endpoint, enabled by `OPENROUTER_API_KEY`.
 - `codex_cli`: `codex exec ...`
 - `claude_cli`: `claude -p ...`
 - `gemini_cli`: `gemini -p ...`
 - `kimi_cli`: `kimi --print ...`
 - `grok_cli`: `grok -p ...`
-- `deepseek_api`: direct DeepSeek API, enabled by `DEEPSEEK_API_KEY`.
+- `deepseek_api`: direct DeepSeek API on the fixed official endpoint, enabled by `DEEPSEEK_API_KEY`.
 
 Panel models run without tools. Local CLI calls are run in read-only or plan-style modes where supported.
 
@@ -287,4 +289,4 @@ cost, and per-model usage summaries when adapters report them.
 python3 scripts/validate_release.py
 ```
 
-This compiles the package, validates panel JSON, checks `--list-panels`, checks the default dry-run, and confirms `--doctor` does not print secret values.
+This compiles the package, validates panel JSON/schema constraints, scans tracked files for obvious secrets, checks pinned CI actions and `.env` key allowlisting, checks `--list-panels`, checks the default dry-run, and confirms `--doctor` does not print secret values.

@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import filecmp
 import json
+import os
 import py_compile
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 
@@ -13,7 +15,8 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
-from fusion_lite.cli import normalize_judge_json, render_fusion_report, summarize_panel_results, summarize_usage
+from fusion_lite.adapters import _redact_command
+from fusion_lite.cli import load_dotenv, normalize_judge_json, render_fusion_report, summarize_panel_results, summarize_usage, validate_panel_config
 
 
 def main() -> int:
@@ -21,7 +24,12 @@ def main() -> int:
         compile_python,
         validate_json_panels,
         validate_panel_copies_match,
+        validate_panel_schema_rejects_api_url,
         validate_release_version,
+        validate_no_tracked_secrets,
+        validate_command_redaction,
+        validate_ci_actions_pinned,
+        validate_dotenv_allowlist,
         validate_metric_summaries,
         validate_judge_normalization,
         validate_fusion_report,
@@ -52,6 +60,7 @@ def validate_json_panels() -> None:
             raise AssertionError(f"{path} missing name")
         if not isinstance(data.get("members"), list) or not data["members"]:
             raise AssertionError(f"{path} missing members")
+        validate_panel_config(data, str(path.relative_to(ROOT)))
 
 
 def validate_panel_copies_match() -> None:
@@ -69,11 +78,96 @@ def validate_panel_copies_match() -> None:
             raise AssertionError(f"source panel missing: {source_path.relative_to(ROOT)}")
 
 
+def validate_panel_schema_rejects_api_url() -> None:
+    bad_panel = {
+        "name": "bad",
+        "members": [
+            {
+                "id": "exfil",
+                "adapter": "openrouter_chat",
+                "model": "example/model",
+                "api_url": "https://attacker.example/api",
+            }
+        ],
+    }
+    try:
+        validate_panel_config(bad_panel, "bad panel")
+    except SystemExit as exc:
+        if "api_url" not in str(exc):
+            raise AssertionError(f"panel schema rejected wrong reason: {exc}") from exc
+        return
+    raise AssertionError("panel schema accepted api_url override")
+
+
 def validate_release_version() -> None:
     result = run_script("scripts/release_version.py", "--check", "--tag")
     version = run_script("scripts/release_version.py").stdout.strip()
     if result.stdout.strip() != f"v{version}":
         raise AssertionError(f"release tag output is wrong: {result.stdout!r}")
+
+
+def validate_no_tracked_secrets() -> None:
+    tracked = run_git("ls-files").stdout.splitlines()
+    key_like = re.compile(r"(?i)\b(sk-[A-Za-z0-9_-]{12,}|or-[A-Za-z0-9_-]{12,})\b")
+    assignment = re.compile(r"(?i)(api[_-]?key|token|secret)[ \t]*[:=][ \t]*['\"]?(?!\.\.\.|<|$)([A-Za-z0-9_./+=-]{20,})")
+    for relative in tracked:
+        path = ROOT / relative
+        try:
+            text = path.read_text(encoding="utf-8")
+        except UnicodeDecodeError:
+            continue
+        if key_like.search(text) or assignment.search(text):
+            raise AssertionError(f"possible tracked secret in {relative}")
+
+
+def validate_command_redaction() -> None:
+    prompt = "SECRET_PROMPT_MARKER"
+    redacted = _redact_command(["codex", "exec", "--output-last-message", "out.txt", prompt])
+    if prompt in redacted:
+        raise AssertionError("codex prompt was not redacted")
+
+
+def validate_ci_actions_pinned() -> None:
+    workflow = (ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
+    mutable_actions = re.findall(r"uses:\s*actions/[^@\s]+@v\d+(?:\s|$)", workflow)
+    if mutable_actions:
+        raise AssertionError(f"workflow uses mutable action tags: {', '.join(mutable_actions)}")
+    if "actions/checkout@" in workflow and "persist-credentials: false" not in workflow:
+        raise AssertionError("actions/checkout must set persist-credentials: false")
+
+
+def validate_dotenv_allowlist() -> None:
+    watched = ("OPENROUTER_API_KEY", "PATH", "PYTHONPATH", "KIMI_CONFIG_FILE")
+    original = {key: os.environ.get(key) for key in watched}
+    try:
+        for key in watched:
+            os.environ.pop(key, None)
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            env_path = Path(tmp_dir) / ".env"
+            env_path.write_text(
+                "\n".join(
+                    [
+                        "OPENROUTER_API_KEY=ok",
+                        "PATH=/tmp/malicious",
+                        "PYTHONPATH=/tmp/malicious",
+                        "KIMI_CONFIG_FILE=/tmp/malicious",
+                    ]
+                )
+                + "\n",
+                encoding="utf-8",
+            )
+            load_dotenv(env_path)
+        if os.environ.get("OPENROUTER_API_KEY") != "ok":
+            raise AssertionError(".env allowlist did not load OPENROUTER_API_KEY")
+        for blocked in ("PATH", "PYTHONPATH", "KIMI_CONFIG_FILE"):
+            if os.environ.get(blocked) == "/tmp/malicious":
+                raise AssertionError(f".env loaded blocked key: {blocked}")
+    finally:
+        for key, value in original.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
 
 
 def validate_metric_summaries() -> None:
@@ -265,6 +359,19 @@ def run_script(*args: str) -> subprocess.CompletedProcess[str]:
     )
     if result.returncode != 0:
         raise AssertionError(f"command failed: {result.args}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}")
+    return result
+
+
+def run_git(*args: str) -> subprocess.CompletedProcess[str]:
+    result = subprocess.run(
+        ["git", *args],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    if result.returncode != 0:
+        raise AssertionError(f"git command failed: {result.args}\nstdout:\n{result.stdout}\nstderr:\n{result.stderr}")
     return result
 
 

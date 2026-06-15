@@ -55,6 +55,59 @@ JUDGE_SCALAR_DEFAULTS: dict[str, Any] = {
     "confidence": "low",
     "final_answer": "",
 }
+ALLOWED_PANEL_FIELDS = {
+    "name",
+    "description",
+    "price_basis",
+    "judge",
+    "judge_model",
+    "judge_timeout_seconds",
+    "fallback_judge",
+    "members",
+}
+ALLOWED_PANEL_MEMBER_FIELDS = {
+    "id",
+    "adapter",
+    "model",
+    "optional",
+    "timeout_seconds",
+    "provider_sort",
+    "temperature",
+    "max_tokens",
+    "reasoning",
+    "max_steps_per_turn",
+    "max_ralph_iterations",
+    "max_retries_per_step",
+    "thinking",
+    "agent",
+    "effort",
+    "max_turns",
+}
+ALLOWED_PANEL_ADAPTERS = {
+    "gemini_cli",
+    "kimi_cli",
+    "grok_cli",
+    "claude_cli",
+    "codex_cli",
+    "deepseek_api",
+    "openrouter_chat",
+}
+ALLOWED_JUDGES = {"claude", "codex", "gemini", "kimi", "grok"}
+DOTENV_ALLOWED_KEYS = {
+    "ANTHROPIC_API_KEY",
+    "CLAUDE_API_KEY",
+    "DEEPSEEK_API_KEY",
+    "FUSION_LITE_RUNS_DIR",
+    "GEMINI_API_KEY",
+    "GROK_API_KEY",
+    "KIMI_API_KEY",
+    "MOONSHOT_API_KEY",
+    "OPENROUTER_API_KEY",
+    "OPENROUTER_HTTP_REFERER",
+    "OPENROUTER_SITE_URL",
+    "OPENROUTER_TITLE",
+    "XAI_API_KEY",
+}
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -231,12 +284,14 @@ def load_panel(name_or_path: str) -> dict[str, Any]:
         with path.open("r", encoding="utf-8") as handle:
             data = json.load(handle)
         data.setdefault("name", path.stem)
+        validate_panel_config(data, str(path))
         return data
 
     packaged = read_packaged_panel(name_or_path)
     if packaged is None:
         raise SystemExit(f"Panel not found: {name_or_path}")
     packaged.setdefault("name", name_or_path)
+    validate_panel_config(packaged, f"packaged panel {name_or_path}")
     return packaged
 
 
@@ -248,6 +303,71 @@ def read_packaged_panel(name: str) -> dict[str, Any] | None:
         return json.loads(panel_file.read_text(encoding="utf-8"))
     except (FileNotFoundError, ModuleNotFoundError, json.JSONDecodeError):
         return None
+
+
+def validate_panel_config(panel: dict[str, Any], source: str = "panel") -> None:
+    if not isinstance(panel, dict):
+        raise SystemExit(f"Invalid {source}: panel must be a JSON object")
+    unknown_panel_fields = sorted(set(panel) - ALLOWED_PANEL_FIELDS)
+    if unknown_panel_fields:
+        raise SystemExit(f"Invalid {source}: unknown top-level fields: {', '.join(unknown_panel_fields)}")
+
+    for key in ("name", "description"):
+        if key in panel and not isinstance(panel[key], str):
+            raise SystemExit(f"Invalid {source}: `{key}` must be a string")
+    if panel.get("judge") is not None and panel["judge"] not in ALLOWED_JUDGES:
+        raise SystemExit(f"Invalid {source}: unsupported judge `{panel['judge']}`")
+    if panel.get("fallback_judge") is not None and panel["fallback_judge"] not in ALLOWED_JUDGES:
+        raise SystemExit(f"Invalid {source}: unsupported fallback_judge `{panel['fallback_judge']}`")
+    if panel.get("judge_model") is not None and not isinstance(panel["judge_model"], str):
+        raise SystemExit(f"Invalid {source}: `judge_model` must be a string")
+    if panel.get("judge_timeout_seconds") is not None:
+        validate_nonnegative_int(panel["judge_timeout_seconds"], source, "judge_timeout_seconds")
+
+    members = panel.get("members")
+    if not isinstance(members, list) or not members:
+        raise SystemExit(f"Invalid {source}: `members` must be a non-empty list")
+    seen_ids: set[str] = set()
+    for index, member in enumerate(members):
+        validate_panel_member(member, source, index, seen_ids)
+
+
+def validate_panel_member(member: Any, source: str, index: int, seen_ids: set[str]) -> None:
+    label = f"{source} member[{index}]"
+    if not isinstance(member, dict):
+        raise SystemExit(f"Invalid {label}: member must be an object")
+    unknown_fields = sorted(set(member) - ALLOWED_PANEL_MEMBER_FIELDS)
+    if unknown_fields:
+        raise SystemExit(f"Invalid {label}: unknown fields: {', '.join(unknown_fields)}")
+
+    member_id = member.get("id")
+    if not isinstance(member_id, str) or not member_id.strip():
+        raise SystemExit(f"Invalid {label}: `id` must be a non-empty string")
+    if member_id in seen_ids:
+        raise SystemExit(f"Invalid {label}: duplicate id `{member_id}`")
+    seen_ids.add(member_id)
+
+    adapter = member.get("adapter")
+    if adapter not in ALLOWED_PANEL_ADAPTERS:
+        raise SystemExit(f"Invalid {label}: unsupported adapter `{adapter}`")
+    for key in ("model", "provider_sort", "agent", "effort"):
+        if member.get(key) is not None and not isinstance(member[key], str):
+            raise SystemExit(f"Invalid {label}: `{key}` must be a string")
+    for key in ("optional", "thinking"):
+        if member.get(key) is not None and not isinstance(member[key], bool):
+            raise SystemExit(f"Invalid {label}: `{key}` must be a boolean")
+    for key in ("timeout_seconds", "max_tokens", "max_steps_per_turn", "max_ralph_iterations", "max_retries_per_step", "max_turns"):
+        if member.get(key) is not None:
+            validate_nonnegative_int(member[key], label, key)
+    if member.get("temperature") is not None and (isinstance(member["temperature"], bool) or not isinstance(member["temperature"], (int, float))):
+        raise SystemExit(f"Invalid {label}: `temperature` must be a number")
+    if member.get("reasoning") is not None and not isinstance(member["reasoning"], dict):
+        raise SystemExit(f"Invalid {label}: `reasoning` must be an object")
+
+
+def validate_nonnegative_int(value: Any, source: str, key: str) -> None:
+    if isinstance(value, bool) or not isinstance(value, int) or value < 0:
+        raise SystemExit(f"Invalid {source}: `{key}` must be a non-negative integer")
 
 
 def load_judge_spec(judge_id: str, judge_model: str | None = None) -> dict[str, Any]:
@@ -1044,7 +1164,7 @@ def load_dotenv(path: Path) -> None:
         key, value = stripped.split("=", 1)
         key = key.strip()
         value = value.strip().strip('"').strip("'")
-        if key and key not in os.environ:
+        if key in DOTENV_ALLOWED_KEYS and key not in os.environ:
             os.environ[key] = value
 
 

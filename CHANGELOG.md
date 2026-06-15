@@ -8,6 +8,8 @@
 - Add a release-version helper and checklist steps that derive the Git tag from validated project/package/changelog versions.
 - Add release validation for source/packaged panel drift and broader `--doctor` secret-output checks.
 - Add macOS to the CI matrix and make generated-artifact release checks explicit.
+- Prevent panel JSON from overriding OpenRouter/DeepSeek API endpoints, add panel schema validation, redact Codex prompts in command artifacts, and harden CI action pinning.
+- Restrict `.env` loading to known Fusion/provider keys instead of importing arbitrary process variables.
 
 ## 0.1.0 - 2026-06-14
 

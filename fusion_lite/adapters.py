@@ -15,6 +15,10 @@ from pathlib import Path
 from typing import Any
 
 
+DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
+
+
 @dataclass
 class AdapterResult:
     id: str
@@ -143,9 +147,9 @@ def render_command(spec: dict[str, Any], timeout: int) -> list[str]:
             cmd[2:2] = ["--model", str(spec["model"])]
         return cmd
     if adapter == "deepseek_api":
-        return ["POST", str(spec.get("api_url") or "https://api.deepseek.com/chat/completions")]
+        return ["POST", DEEPSEEK_API_URL]
     if adapter == "openrouter_chat":
-        return ["POST", "https://openrouter.ai/api/v1/chat/completions", str(spec.get("model") or "<model>")]
+        return ["POST", OPENROUTER_API_URL, str(spec.get("model") or "<model>")]
     return [adapter]
 
 
@@ -277,7 +281,6 @@ def _run_deepseek_api(spec: dict[str, Any], prompt: str, work_dir: Path, timeout
             error="DEEPSEEK_API_KEY is not set",
         )
 
-    api_url = str(spec.get("api_url") or os.getenv("DEEPSEEK_API_URL") or "https://api.deepseek.com/chat/completions")
     model = str(spec.get("model") or "deepseek-chat")
     body = {
         "model": model,
@@ -289,7 +292,7 @@ def _run_deepseek_api(spec: dict[str, Any], prompt: str, work_dir: Path, timeout
         "max_tokens": int(spec.get("max_tokens", 2500)),
     }
     req = urllib.request.Request(
-        api_url,
+        DEEPSEEK_API_URL,
         data=json.dumps(body).encode("utf-8"),
         headers={
             "Authorization": f"Bearer {api_key}",
@@ -309,7 +312,7 @@ def _run_deepseek_api(spec: dict[str, Any], prompt: str, work_dir: Path, timeout
             status="error",
             content="",
             elapsed_seconds=time.monotonic() - started,
-            command=["POST", api_url],
+            command=["POST", DEEPSEEK_API_URL],
             error=f"HTTP {exc.code}: {error_body}",
         )
     except Exception as exc:  # noqa: BLE001 - adapter boundary should not crash the run
@@ -320,7 +323,7 @@ def _run_deepseek_api(spec: dict[str, Any], prompt: str, work_dir: Path, timeout
             status="error",
             content="",
             elapsed_seconds=time.monotonic() - started,
-            command=["POST", api_url],
+            command=["POST", DEEPSEEK_API_URL],
             error=str(exc),
         )
 
@@ -334,7 +337,7 @@ def _run_deepseek_api(spec: dict[str, Any], prompt: str, work_dir: Path, timeout
         status="ok" if content else "error",
         content=content,
         elapsed_seconds=time.monotonic() - started,
-        command=["POST", api_url],
+        command=["POST", DEEPSEEK_API_URL],
         error=None if content else "empty DeepSeek response",
         usage=payload.get("usage") or {},
         raw_json=payload,
@@ -355,7 +358,6 @@ def _run_openrouter_chat(spec: dict[str, Any], prompt: str, work_dir: Path, time
             error="OPENROUTER_API_KEY is not set",
         )
 
-    api_url = str(spec.get("api_url") or "https://openrouter.ai/api/v1/chat/completions")
     model = str(spec["model"])
     body: dict[str, Any] = {
         "model": model,
@@ -383,7 +385,7 @@ def _run_openrouter_chat(spec: dict[str, Any], prompt: str, work_dir: Path, time
         headers["X-OpenRouter-Title"] = title
 
     req = urllib.request.Request(
-        api_url,
+        OPENROUTER_API_URL,
         data=json.dumps(body).encode("utf-8"),
         headers=headers,
         method="POST",
@@ -400,7 +402,7 @@ def _run_openrouter_chat(spec: dict[str, Any], prompt: str, work_dir: Path, time
             status="error",
             content="",
             elapsed_seconds=time.monotonic() - started,
-            command=["POST", api_url, model],
+            command=["POST", OPENROUTER_API_URL, model],
             error=f"HTTP {exc.code}: {error_body}",
         )
     except Exception as exc:  # noqa: BLE001 - adapter boundary should not crash the run
@@ -411,7 +413,7 @@ def _run_openrouter_chat(spec: dict[str, Any], prompt: str, work_dir: Path, time
             status="error",
             content="",
             elapsed_seconds=time.monotonic() - started,
-            command=["POST", api_url, model],
+            command=["POST", OPENROUTER_API_URL, model],
             error=str(exc),
         )
 
@@ -426,7 +428,7 @@ def _run_openrouter_chat(spec: dict[str, Any], prompt: str, work_dir: Path, time
         status="ok" if content else "error",
         content=content,
         elapsed_seconds=time.monotonic() - started,
-        command=["POST", api_url, model],
+        command=["POST", OPENROUTER_API_URL, model],
         error=None if content else "empty OpenRouter response",
         usage=payload.get("usage") or {},
         raw_json=payload,
@@ -765,6 +767,8 @@ def _redact_command(cmd: list[str]) -> list[str]:
         elif part == "-p" and binary in {"gemini", "grok"}:
             skip_next = True
         elif binary == "claude" and index == len(cmd) - 2:
+            skip_next = True
+        elif binary == "codex" and index == len(cmd) - 2:
             skip_next = True
     return redacted
 
