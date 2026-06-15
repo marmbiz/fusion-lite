@@ -1,0 +1,29 @@
+{
+  "name": "code",
+  "description": "Code-oriented panel. Codex judges by default.",
+  "judge": "codex",
+  "fallback_judge": "claude",
+  "members": [
+    {
+      "id": "gemini_flash",
+      "adapter": "gemini_cli",
+      "model": "gemini-2.5-flash",
+      "timeout_seconds": 120
+    },
+    {
+      "id": "claude",
+      "adapter": "claude_cli",
+      "timeout_seconds": 180
+    },
+    {
+      "id": "kimi",
+      "adapter": "kimi_cli",
+      "timeout_seconds": 180
+    },
+    {
+      "id": "grok",
+      "adapter": "grok_cli",
+      "timeout_seconds": 180
+    }
+  ]
+}

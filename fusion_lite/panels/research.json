@@ -1,0 +1,38 @@
+{
+  "name": "research",
+  "description": "Wider panel for research and strategy prompts.",
+  "judge": "claude",
+  "fallback_judge": "codex",
+  "members": [
+    {
+      "id": "gemini_flash",
+      "adapter": "gemini_cli",
+      "model": "gemini-2.5-flash",
+      "timeout_seconds": 120
+    },
+    {
+      "id": "gemini_3_flash_preview",
+      "adapter": "gemini_cli",
+      "model": "gemini-3-flash-preview",
+      "optional": true,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "kimi",
+      "adapter": "kimi_cli",
+      "timeout_seconds": 180
+    },
+    {
+      "id": "grok",
+      "adapter": "grok_cli",
+      "timeout_seconds": 180
+    },
+    {
+      "id": "deepseek",
+      "adapter": "deepseek_api",
+      "model": "deepseek-v4-pro",
+      "optional": true,
+      "timeout_seconds": 180
+    }
+  ]
+}

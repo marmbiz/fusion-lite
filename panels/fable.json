@@ -1,0 +1,38 @@
+{
+  "name": "fable",
+  "description": "Reliability-first Fable-style panel: Gemini 3 Flash and DeepSeek V4 Pro through OpenRouter, local Kimi CLI, judged by Codex.",
+  "price_basis": "OpenRouter Models API checked 2026-06-14 for remote members; local Kimi uses the installed CLI subscription.",
+  "judge": "codex",
+  "judge_timeout_seconds": 600,
+  "fallback_judge": "codex",
+  "members": [
+    {
+      "id": "or_gemini_3_flash",
+      "adapter": "openrouter_chat",
+      "model": "google/gemini-3-flash-preview",
+      "provider_sort": "price",
+      "reasoning": {"enabled": false},
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "local_kimi",
+      "adapter": "kimi_cli",
+      "max_steps_per_turn": 8,
+      "max_ralph_iterations": 0,
+      "max_retries_per_step": 1,
+      "timeout_seconds": 600
+    },
+    {
+      "id": "or_deepseek_v4_pro",
+      "adapter": "openrouter_chat",
+      "model": "deepseek/deepseek-v4-pro",
+      "provider_sort": "price",
+      "reasoning": {"enabled": false},
+      "temperature": 0.2,
+      "max_tokens": 3000,
+      "timeout_seconds": 180
+    }
+  ]
+}

@@ -1,0 +1,31 @@
+{
+  "name": "default",
+  "description": "Balanced local panel for general prompts. Claude judges by default.",
+  "judge": "claude",
+  "fallback_judge": "codex",
+  "members": [
+    {
+      "id": "gemini_flash",
+      "adapter": "gemini_cli",
+      "model": "gemini-2.5-flash",
+      "timeout_seconds": 120
+    },
+    {
+      "id": "kimi",
+      "adapter": "kimi_cli",
+      "timeout_seconds": 180
+    },
+    {
+      "id": "grok",
+      "adapter": "grok_cli",
+      "timeout_seconds": 180
+    },
+    {
+      "id": "deepseek",
+      "adapter": "deepseek_api",
+      "model": "deepseek-v4-pro",
+      "optional": true,
+      "timeout_seconds": 180
+    }
+  ]
+}

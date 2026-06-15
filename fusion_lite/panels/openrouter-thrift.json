@@ -1,0 +1,45 @@
+{
+  "name": "openrouter-thrift",
+  "description": "Ultra-cheap OpenRouter panel for exploratory runs; local Claude->Codex judging.",
+  "price_basis": "OpenRouter Models API checked 2026-06-14; pricing fields are USD per token.",
+  "judge": "claude",
+  "fallback_judge": "codex",
+  "members": [
+    {
+      "id": "or_glm_4_7_flash",
+      "adapter": "openrouter_chat",
+      "model": "z-ai/glm-4.7-flash",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2000,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_deepseek_v4_flash",
+      "adapter": "openrouter_chat",
+      "model": "deepseek/deepseek-v4-flash",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2000,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_gemini_2_5_flash_lite",
+      "adapter": "openrouter_chat",
+      "model": "google/gemini-2.5-flash-lite",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2000,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_minimax_m2_5",
+      "adapter": "openrouter_chat",
+      "model": "minimax/minimax-m2.5",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2000,
+      "timeout_seconds": 180
+    }
+  ]
+}

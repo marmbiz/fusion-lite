@@ -1,0 +1,19 @@
+{
+  "name": "cheap",
+  "description": "Small panel for quick sanity checks.",
+  "judge": "claude",
+  "fallback_judge": "codex",
+  "members": [
+    {
+      "id": "gemini_flash",
+      "adapter": "gemini_cli",
+      "model": "gemini-2.5-flash",
+      "timeout_seconds": 120
+    },
+    {
+      "id": "kimi",
+      "adapter": "kimi_cli",
+      "timeout_seconds": 150
+    }
+  ]
+}

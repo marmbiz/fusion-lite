@@ -1,0 +1,66 @@
+{
+  "name": "hybrid-budget",
+  "description": "OpenRouter budget panel plus local frontier CLI inputs; local Claude->Codex judging.",
+  "price_basis": "OpenRouter Models API checked 2026-06-14; pricing fields are USD per token.",
+  "judge": "claude",
+  "fallback_judge": "codex",
+  "members": [
+    {
+      "id": "or_deepseek_v4_pro",
+      "adapter": "openrouter_chat",
+      "model": "deepseek/deepseek-v4-pro",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2500,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_minimax_m3",
+      "adapter": "openrouter_chat",
+      "model": "minimax/minimax-m3",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2500,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_glm_5_1",
+      "adapter": "openrouter_chat",
+      "model": "z-ai/glm-5.1",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2500,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_gemini_3_1_flash_lite",
+      "adapter": "openrouter_chat",
+      "model": "google/gemini-3.1-flash-lite",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2500,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_kimi_k2_5",
+      "adapter": "openrouter_chat",
+      "model": "moonshotai/kimi-k2.5",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 2500,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "local_codex_input",
+      "adapter": "codex_cli",
+      "optional": true,
+      "timeout_seconds": 240
+    },
+    {
+      "id": "local_claude_input",
+      "adapter": "claude_cli",
+      "optional": true,
+      "timeout_seconds": 240
+    }
+  ]
+}

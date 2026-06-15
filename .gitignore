@@ -1,0 +1,18 @@
+.env
+.env.*
+!.env.example
+.fusion-lite/
+runs/
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+build/
+dist/
+*.egg-info/
+.DS_Store
+
+# Local/private prompt scratch space. Public examples live in examples/.
+prompts/
