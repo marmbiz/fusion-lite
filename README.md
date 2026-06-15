@@ -1,27 +1,115 @@
 # Fusion Lite
 
-Let the subscriptions you already have do the heavy lifting.
+<p align="center">
+  <strong>Let the subscriptions you already have do the heavy lifting.</strong>
+</p>
 
-Fusion Lite is a local fusion-style orchestrator for people who already use tools like Codex CLI, Claude Code, Gemini, Kimi, Grok, or OpenRouter and want those existing subscriptions to work together as a model panel.
+<p align="center">
+  <a href="https://github.com/martinmoellerbiz/fusion-lite/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/martinmoellerbiz/fusion-lite/actions/workflows/ci.yml/badge.svg"></a>
+  <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue">
+  <img alt="No runtime dependencies" src="https://img.shields.io/badge/runtime_dependencies-0-brightgreen">
+  <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-black">
+</p>
 
-OpenRouter can add cheap diversity, but it is not the center of the architecture. The center is your local stack: the CLIs and API access you already pay for, combined with a judge that turns separate model outputs into a structured Fusion-style report.
+<p align="center">
+  <code>Codex</code> + <code>Claude</code> + <code>Gemini</code> + <code>Kimi</code> + <code>Grok</code> + optional <code>OpenRouter</code><br>
+  one local terminal report, one judge, one audit trail.
+</p>
 
-## What It Does
+Fusion Lite is a local fusion-style multi-model CLI. It runs a prompt through a
+panel of models, asks a judge model to compare the answers, and prints a
+structured report with consensus, disagreements, blind spots, unique insights,
+cost notes, and a final synthesis.
 
-- Calls several independent panel models in parallel.
-- Uses local CLI subscriptions as panel members or judges.
-- Uses OpenRouter budget models as optional cheap diversity.
-- Uses a judge model such as Codex, Claude, Gemini, Kimi, or Grok for analysis and final synthesis.
-- Captures command, stdout, stderr, status, elapsed time, and compact terminal error details for local CLI adapters.
-- Saves the raw panel responses, judge prompt, judge JSON, analysis markdown, final answer, Fusion-style report, and metadata for each run.
-- Summarizes panel success, latency, token usage, and known API cost so runs can be compared on quality, speed, and price.
-- Uses plain Python and the standard library. No runtime package dependencies.
+It is built around a simple idea:
 
-It is not a wrapper around OpenRouter's `openrouter:fusion` server tool. That tool is useful, but it runs both panel and judge remotely. Fusion Lite keeps the final judge local by default.
+> You already pay for strong AI tools. Use them together instead of paying again
+> for every model call through one hosted router.
+
+OpenRouter is supported and useful for cheap panel diversity. It is not the
+center of the architecture. The center is your local stack: the CLIs and API
+access you already use.
+
+## Quick Demo
+
+```bash
+fusion-lite --panel fable "Review this launch positioning."
+```
+
+```text
+[fusion-lite] STEP 1/3 SOURCES: running 3 panel sources
+[fusion-lite] STEP 2/3 ANALYSIS: judge codex
+[fusion-lite] STEP 3/3 RESULT: printing terminal output
+
+# Fusion Report
+
+## Sources
+| Source | Status | Time | Notes |
+| --- | --- | --- | --- |
+| or_gemini_3_flash | ok | 18.2s | remote OpenRouter voice |
+| local_kimi | ok | 41.7s | local CLI subscription |
+| or_deepseek_v4_pro | ok | 22.4s | remote OpenRouter voice |
+
+## Analysis
+- Agreement: what the panel consistently sees.
+- Key Differences: where model judgments diverge.
+- Blind Spots: what the panel failed to check.
+- Unique Insights: useful minority observations.
+- Action Delta: the next concrete change.
+
+## Final Answer
+The judge synthesizes the panel into a direct answer you can act on.
+```
+
+## Why Fusion Lite Exists
+
+OpenRouter Fusion is a hosted server-side fusion product. Fusion Lite is the
+local counterpart for people who already have CLI subscriptions and want control
+over orchestration, judging, artifacts, and cost.
+
+| If you currently... | Fusion Lite lets you... |
+| --- | --- |
+| Ask Codex, Claude, Kimi, or Gemini one at a time | Run them as a panel from one command |
+| Copy model answers into another chat manually | Generate a structured judge report automatically |
+| Pay for subscriptions that sit idle during API-only workflows | Reuse those local subscriptions as panel members or judges |
+| Need to see what happened after a run | Keep prompt, response, stderr, judge JSON, final answer, and metadata |
+| Want OpenRouter diversity without moving everything remote | Mix OpenRouter voices with local CLI voices |
+
+## What Makes It Different
+
+| Feature | Fusion Lite | OpenRouter Fusion | Manual multi-model prompting |
+| --- | --- | --- | --- |
+| Runs locally | Yes | No | Partly |
+| Uses existing CLI subscriptions | Yes | No | Yes |
+| Optional OpenRouter panel voices | Yes | Yes | Yes |
+| Structured judge schema | Yes | Hosted/internal | No |
+| Terminal-first workflow | Yes | No | No |
+| Saved local audit trail | Yes | No | Manual |
+| No runtime package dependencies | Yes | N/A | N/A |
+
+Fusion Lite is not a wrapper around OpenRouter's `openrouter:fusion` server
+tool. That tool can be useful, but it runs the fusion process remotely. Fusion
+Lite keeps orchestration and judging local by default.
+
+## Features
+
+- Parallel panel runs across local CLIs and API adapters.
+- Local judge support for Codex, Claude, Gemini, Kimi, and Grok.
+- Optional OpenRouter and DeepSeek API adapters.
+- Built-in panel presets for cheap exploration, research, code, and Fable-style review.
+- Fusion-style terminal report by default.
+- Machine-readable JSON output for automation.
+- Saved audit trail for every run.
+- Compact live progress for long-running CLI calls.
+- Redacted command artifacts so prompts are not leaked through command logs.
+- Panel schema validation to reject unsafe custom panel fields.
+- Fixed official OpenRouter and DeepSeek API endpoints.
+- `.env` key allowlisting for safer local configuration.
+- Zero runtime package dependencies.
 
 ## Install
 
-From a local clone:
+From a clone:
 
 ```bash
 git clone https://github.com/martinmoellerbiz/fusion-lite.git
@@ -35,7 +123,7 @@ For development:
 python3 -m pip install -e .
 ```
 
-You can also run from the source tree without installing:
+Run from the source tree without installing:
 
 ```bash
 python3 -m fusion_lite --list-panels
@@ -50,29 +138,31 @@ Create a local `.env` file or export environment variables in your shell:
 cp .env.example .env
 ```
 
-`.env` loading is intentionally allowlisted to Fusion/provider variables. Export unusual local CLI environment settings in your shell instead of relying on `.env`.
-
-Minimum useful setup:
+Minimum useful setup for OpenRouter-backed panels:
 
 ```bash
 OPENROUTER_API_KEY=...
 ```
 
-Recommended local judge setup:
+Recommended local setup:
 
-- Codex CLI authenticated, or
-- Claude Code authenticated, or
-- both.
+- Codex CLI authenticated.
+- Claude Code authenticated.
+- Any optional CLIs you want as panel voices: `gemini`, `kimi`, `grok`.
 
-Check the environment:
+Check what Fusion Lite can see:
 
 ```bash
 fusion-lite --doctor
 ```
 
-`--doctor` reports whether keys and CLI binaries are available. It does not print secrets.
+`--doctor` reports available keys and binaries without printing secrets.
 
-## Quick Start
+`.env` loading is intentionally allowlisted to Fusion/provider variables. Export
+unusual local CLI environment settings in your shell instead of relying on
+`.env`.
+
+## Usage
 
 Default run:
 
@@ -80,30 +170,22 @@ Default run:
 fusion-lite "Compare these two positioning ideas."
 ```
 
-The default panel is `openrouter-budget`: pinned low-cost OpenRouter voices with local Claude -> Codex judge fallback.
-
-Cheapest exploratory run:
+Cheapest exploratory OpenRouter run:
 
 ```bash
 fusion-lite --panel openrouter-thrift "Give me a first-pass critique."
 ```
 
-Use OpenRouter plus local CLI voices as extra panel members:
+Use OpenRouter plus local CLI voices:
 
 ```bash
 fusion-lite --panel hybrid-budget "Where do the models disagree?"
 ```
 
-Use the Fable-style budget panel from OpenRouter's Fusion notes:
+Use the Fable-style reliability panel:
 
 ```bash
 fusion-lite --panel fable "Do the hard research synthesis."
-```
-
-Pin a local judge model alias for the primary judge when your CLI supports it. Fallback judges keep their own default model:
-
-```bash
-fusion-lite --panel default --judge claude --judge-model opus "Review this package."
 ```
 
 Use local CLIs only:
@@ -112,53 +194,28 @@ Use local CLIs only:
 fusion-lite --panel default "Review this argument."
 ```
 
-Machine-readable output:
+Pin the judge and judge model when your CLI supports it:
 
 ```bash
-fusion-lite --json "Give me the answer and disagreement map."
+fusion-lite --panel default --judge claude --judge-model opus "Review this package."
 ```
 
-By default, Fusion Lite prints a Fusion-style three-step report directly in the terminal:
+Read from stdin:
 
 ```bash
-fusion-lite --panel fable "Review this package."
+cat brief.md | fusion-lite -
 ```
 
-Terminal only, without keeping the run artifacts:
-
-```bash
-fusion-lite --panel fable --no-save "Review this package."
-```
-
-During the run, stderr shows the same phase structure:
-
-```text
-[fusion-lite] STEP 1/3 SOURCES: running 3 panel sources
-[fusion-lite] STEP 2/3 ANALYSIS: judge codex
-[fusion-lite] STEP 3/3 RESULT: printing terminal output
-```
-
-Print only the final answer when you need the old compact output:
+Print only the final answer:
 
 ```bash
 fusion-lite --panel fable --output final "Review this package."
 ```
 
-Long-running local CLI calls print progress heartbeats to stderr every 30 seconds by default:
+Return machine-readable JSON:
 
 ```bash
-fusion-lite --panel fable --progress-interval 15 "Review this package."
-fusion-lite --panel fable --progress-interval 0 "Run quietly."
-```
-
-The heartbeat shows which adapter is still running and elapsed time. It does not expose hidden model reasoning; final content is still written only after the model returns.
-
-For local CLI reliability, Fusion Lite writes `command.txt`, `stdout.txt`, and `stderr.txt` beside each local adapter result. The terminal report also includes compact source and judge errors, including parsed JSON API errors from CLIs like Claude, so `--no-save` runs remain debuggable without digging through artifacts.
-
-Read a prompt from stdin:
-
-```bash
-cat brief.md | fusion-lite -
+fusion-lite --json "Give me the answer and disagreement map."
 ```
 
 Dry-run without model calls:
@@ -167,36 +224,56 @@ Dry-run without model calls:
 fusion-lite --dry-run "release check"
 ```
 
-## Panels
+Delete run artifacts after printing:
 
-Built-in presets:
+```bash
+fusion-lite --panel fable --no-save "Review this package."
+```
 
-| Panel | Use |
-| --- | --- |
-| `openrouter-budget` | Default. Strong low-cost OpenRouter diversity, local Claude -> Codex judging. |
-| `openrouter-thrift` | Very cheap exploratory panel. |
-| `fable` | Reliability-first Fable-style panel: Gemini 3 Flash and DeepSeek V4 Pro through OpenRouter, local Kimi, judged by Codex. |
-| `hybrid-budget` | OpenRouter budget panel plus optional local Codex and Claude panel voices. |
-| `default` | Older local-CLI-first panel: Gemini, Kimi, Grok, optional DeepSeek. |
-| `cheap` | Small local panel: Gemini and Kimi. |
-| `code` | Code-oriented panel with Codex as primary judge. |
-| `research` | Wider local research/strategy panel. |
+Adjust progress heartbeats:
 
-List available panels:
+```bash
+fusion-lite --panel fable --progress-interval 15 "Review this package."
+fusion-lite --panel fable --progress-interval 0 "Run quietly."
+```
+
+The heartbeat shows which adapter is still running and elapsed time. It does
+not expose hidden model reasoning; final content is written only after a model
+returns.
+
+## Built-In Panels
+
+| Panel | Best for | Shape |
+| --- | --- | --- |
+| `openrouter-budget` | Default low-cost analysis | OpenRouter diversity, local Claude -> Codex judge fallback |
+| `openrouter-thrift` | Cheapest exploration | Very low-cost OpenRouter voices |
+| `fable` | Stronger synthesis | Gemini 3 Flash and DeepSeek V4 Pro via OpenRouter, local Kimi, judged by Codex |
+| `hybrid-budget` | Mixed local/remote panel | OpenRouter budget voices plus optional local Codex and Claude |
+| `default` | Local-first review | Gemini, Kimi, Grok, optional DeepSeek, Claude judge |
+| `cheap` | Small local pass | Gemini and Kimi |
+| `code` | Code review | Code-oriented panel with Codex as primary judge |
+| `research` | Wider research/strategy | Broader local panel |
+
+List panels:
 
 ```bash
 fusion-lite --list-panels
 ```
 
-Use a custom panel file:
+Use your own panel file:
 
 ```bash
 fusion-lite --panel ./my-panel.json "prompt"
 ```
 
-## Current Panel Model Anchors
+Custom panel JSON is schema-validated. Unknown fields such as custom API
+endpoints are rejected.
 
-OpenRouter prices were checked against the Models API on 2026-06-14. Local CLI entries use your local authenticated subscription instead of OpenRouter billing. Treat this table as a preset rationale, not a guarantee.
+## Current Model Anchors
+
+OpenRouter prices were checked against the Models API on 2026-06-14. Local CLI
+entries use your authenticated subscription instead of OpenRouter billing. Treat
+this table as preset rationale, not a pricing guarantee.
 
 | Model | Panel use | Input / output per 1M tokens |
 | --- | --- | --- |
@@ -212,25 +289,55 @@ OpenRouter prices were checked against the Models API on 2026-06-14. Local CLI e
 | `moonshotai/kimi-k2.5` | budget | $0.375 / $2.025 |
 | `z-ai/glm-5.1` | budget | $0.98 / $3.08 |
 
-The `~...-latest` aliases are convenient, but they can silently change price and behavior. The default panels use pinned model IDs.
+The `~...-latest` aliases are convenient, but they can silently change price
+and behavior. The default panels use pinned model IDs.
+
+## How A Run Works
+
+```text
+User prompt
+    |
+    v
+Panel prompt
+    |
+    +--> model A
+    +--> model B
+    +--> model C
+    |
+    v
+Judge prompt with all usable outputs
+    |
+    v
+Structured analysis JSON
+    |
+    v
+Terminal Fusion report + saved artifacts
+```
+
+The judge is instructed to be a mechanism judge, not just a summarizer. It
+looks for consensus, disagreement, missing checks, unsupported claims,
+conversion risk, and the cheapest next escalation.
 
 ## Run Artifacts
 
-Every run writes an audit trail under `.fusion-lite/runs/<timestamp>_<panel>/` by default:
+Every run writes an audit trail under `.fusion-lite/runs/<timestamp>_<panel>/`
+by default:
 
-- `prompt.txt`
-- `panel/<model>/prompt.txt`
-- `panel/<model>/response.md`
-- `panel/<model>/result.json`
-- `panel_results.json`
-- `judge/<judge>/prompt.txt`
-- `judge/<judge>/result.json`
-- `judge/<judge>/raw.txt`
-- `judge.json`
-- `analysis.md`
-- `final.md`
-- `fusion_report.md`
-- `metadata.json`
+```text
+prompt.txt
+panel/<model>/prompt.txt
+panel/<model>/response.md
+panel/<model>/result.json
+panel_results.json
+judge/<judge>/prompt.txt
+judge/<judge>/result.json
+judge/<judge>/raw.txt
+judge.json
+analysis.md
+final.md
+fusion_report.md
+metadata.json
+```
 
 Change the output location:
 
@@ -239,19 +346,25 @@ fusion-lite --runs-dir ./runs "prompt"
 FUSION_LITE_RUNS_DIR=./runs fusion-lite "prompt"
 ```
 
+For local CLI reliability, Fusion Lite writes `command.txt`, `stdout.txt`, and
+`stderr.txt` beside each local adapter result. The terminal report also includes
+compact source and judge errors, including parsed JSON API errors from CLIs like
+Claude, so `--no-save` runs remain debuggable without digging through artifacts.
+
 ## Adapters
 
-Supported adapters:
+| Adapter | Backing tool | Notes |
+| --- | --- | --- |
+| `openrouter_chat` | OpenRouter Chat Completions | Fixed official endpoint, needs `OPENROUTER_API_KEY` |
+| `codex_cli` | `codex exec ...` | Local CLI subscription |
+| `claude_cli` | `claude -p ...` | Local CLI subscription |
+| `gemini_cli` | `gemini -p ...` | Local CLI subscription |
+| `kimi_cli` | `kimi --print ...` | Local CLI subscription |
+| `grok_cli` | `grok -p ...` | Local CLI subscription |
+| `deepseek_api` | DeepSeek API | Fixed official endpoint, needs `DEEPSEEK_API_KEY` |
 
-- `openrouter_chat`: OpenRouter Chat Completions on the fixed official endpoint, enabled by `OPENROUTER_API_KEY`.
-- `codex_cli`: `codex exec ...`
-- `claude_cli`: `claude -p ...`
-- `gemini_cli`: `gemini -p ...`
-- `kimi_cli`: `kimi --print ...`
-- `grok_cli`: `grok -p ...`
-- `deepseek_api`: direct DeepSeek API on the fixed official endpoint, enabled by `DEEPSEEK_API_KEY`.
-
-Panel models run without tools. Local CLI calls are run in read-only or plan-style modes where supported.
+Panel models run without tools. Local CLI calls are run in read-only or
+plan-style modes where supported.
 
 ## Judge Output
 
@@ -280,11 +393,29 @@ The judge returns structured JSON and a readable `analysis.md` with:
 - cost/quality notes;
 - final answer.
 
-The terminal prints the Fusion-style report by default. Use `--output final` for the compact final answer, or `--json` for machine-readable output.
+The terminal prints the Fusion-style report by default. Use `--output final` for
+the compact final answer, or `--json` for machine-readable output.
 
 `metadata.json` also includes aggregate panel metrics: success/error counts,
 parallel wall-time estimate, total model compute seconds, token usage, known API
 cost, and per-model usage summaries when adapters report them.
+
+## Security And Privacy
+
+Fusion Lite is local orchestration, not local inference. Prompts are still sent
+to whichever model providers or CLIs you configure.
+
+| Surface | What to know |
+| --- | --- |
+| Run artifacts | Prompt and model outputs are saved locally unless `--no-save` is used |
+| API adapters | OpenRouter and DeepSeek use fixed official endpoints |
+| Custom panels | Unknown fields and endpoint overrides are rejected |
+| `.env` | Only known Fusion/provider keys are loaded |
+| Local CLIs | `codex`, `claude`, `gemini`, `kimi`, and `grok` are resolved from `PATH` |
+| Public release | `scripts/validate_release.py` scans tracked files for obvious secrets |
+
+Do not run confidential prompts unless the configured providers and local
+environment are acceptable for that data. See `SECURITY.md` for the full policy.
 
 ## Public Release Checks
 
@@ -292,4 +423,19 @@ cost, and per-model usage summaries when adapters report them.
 python3 scripts/validate_release.py
 ```
 
-This compiles the package, validates panel JSON/schema constraints, scans tracked files for obvious secrets, checks pinned CI actions and `.env` key allowlisting, checks `--list-panels`, checks the default dry-run, and confirms `--doctor` does not print secret values.
+This compiles the package, validates panel JSON/schema constraints, scans
+tracked files for obvious secrets, checks pinned CI actions and `.env` key
+allowlisting, checks `--list-panels`, checks the default dry-run, and confirms
+`--doctor` does not print secret values.
+
+## Project Status
+
+Fusion Lite is alpha software. The core contract is intentionally small:
+
+- run a panel;
+- preserve enough evidence to debug it;
+- judge the panel with a stronger or trusted local model;
+- print a useful terminal report.
+
+The next improvements should stay in that lane: adapter reliability, better
+panel presets, stronger tests, and clearer report ergonomics.
