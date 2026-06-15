@@ -36,8 +36,8 @@ classifiers = [
 dependencies = []
 
 [project.urls]
-Homepage = "https://github.com/martinmoellerbiz/fusion-lite"
-Issues = "https://github.com/martinmoellerbiz/fusion-lite/issues"
+Homepage = "https://github.com/marmbiz/fusion-lite"
+Issues = "https://github.com/marmbiz/fusion-lite/issues"
 
 [project.scripts]
 fusion-lite = "fusion_lite.cli:main"

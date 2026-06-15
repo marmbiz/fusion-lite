@@ -5,7 +5,7 @@
 </p>
 
 <p align="center">
-  <a href="https://github.com/martinmoellerbiz/fusion-lite/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/martinmoellerbiz/fusion-lite/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://github.com/marmbiz/fusion-lite/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/marmbiz/fusion-lite/actions/workflows/ci.yml/badge.svg"></a>
   <img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue">
   <img alt="No runtime dependencies" src="https://img.shields.io/badge/runtime_dependencies-0-brightgreen">
   <img alt="License: MIT" src="https://img.shields.io/badge/license-MIT-black">
@@ -112,7 +112,7 @@ Lite keeps orchestration and judging local by default.
 From a clone:
 
 ```bash
-git clone https://github.com/martinmoellerbiz/fusion-lite.git
+git clone https://github.com/marmbiz/fusion-lite.git
 cd fusion-lite
 pipx install .
 ```
