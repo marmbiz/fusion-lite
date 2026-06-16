@@ -6,6 +6,7 @@ Do not run confidential prompts unless you are comfortable with:
 
 - the selected OpenRouter models seeing panel prompts;
 - the selected direct API adapters sending prompts to their fixed official API endpoints;
+- OpenAI data-sharing/free-daily-token panels sharing inputs and outputs with OpenAI when enabled for that project;
 - the selected local judge CLI seeing panel outputs;
 - run artifacts being written under `.fusion-lite/runs` or your configured `FUSION_LITE_RUNS_DIR`.
 
@@ -15,6 +16,7 @@ Use environment variables or a local `.env` file:
 
 ```bash
 OPENROUTER_API_KEY=...
+OPENAI_API_KEY=...
 ```
 
 Never commit `.env`, run artifacts, or private prompt files. The repository `.gitignore` excludes these by default.

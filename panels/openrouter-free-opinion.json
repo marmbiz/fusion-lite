@@ -1,0 +1,45 @@
+{
+  "name": "openrouter-free-opinion",
+  "description": "Free OpenRouter opinion panel for exploratory critique; excludes specialist content-safety models.",
+  "price_basis": "OpenRouter Models API checked 2026-06-16; free endpoints can be rate-limited or less reliable.",
+  "judge": "claude",
+  "fallback_judge": "codex",
+  "members": [
+    {
+      "id": "or_nex_n2_pro_free",
+      "adapter": "openrouter_chat",
+      "model": "nex-agi/nex-n2-pro:free",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 1800,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_nemotron_3_ultra_free",
+      "adapter": "openrouter_chat",
+      "model": "nvidia/nemotron-3-ultra-550b-a55b:free",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 1800,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_nemotron_3_super_free",
+      "adapter": "openrouter_chat",
+      "model": "nvidia/nemotron-3-super-120b-a12b:free",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 1800,
+      "timeout_seconds": 180
+    },
+    {
+      "id": "or_qwen3_next_free",
+      "adapter": "openrouter_chat",
+      "model": "qwen/qwen3-next-80b-a3b-instruct:free",
+      "provider_sort": "price",
+      "temperature": 0.2,
+      "max_tokens": 1800,
+      "timeout_seconds": 180
+    }
+  ]
+}

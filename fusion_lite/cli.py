@@ -90,6 +90,7 @@ ALLOWED_PANEL_ADAPTERS = {
     "claude_cli",
     "codex_cli",
     "deepseek_api",
+    "openai_api",
     "openrouter_chat",
 }
 ALLOWED_JUDGES = {"claude", "codex", "gemini", "kimi", "grok"}
@@ -102,6 +103,11 @@ DOTENV_ALLOWED_KEYS = {
     "GROK_API_KEY",
     "KIMI_API_KEY",
     "MOONSHOT_API_KEY",
+    "OPENAI_API_KEY",
+    "OPENAI_ORG_ID",
+    "OPENAI_ORGANIZATION",
+    "OPENAI_PROJECT",
+    "OPENAI_PROJECT_ID",
     "OPENROUTER_API_KEY",
     "OPENROUTER_HTTP_REFERER",
     "OPENROUTER_SITE_URL",
@@ -1171,6 +1177,7 @@ def load_dotenv(path: Path) -> None:
 def print_doctor() -> None:
     print(f"fusion-lite {__version__}")
     print(f"runs_dir\t{resolve_runs_dir(None)}")
+    print(f"openai_key\t{'set' if os.getenv('OPENAI_API_KEY') else 'missing'}")
     print(f"openrouter_key\t{'set' if os.getenv('OPENROUTER_API_KEY') else 'missing'}")
     print(f"deepseek_key\t{'set' if os.getenv('DEEPSEEK_API_KEY') else 'missing'}")
     for binary in ("codex", "claude", "gemini", "kimi", "grok"):

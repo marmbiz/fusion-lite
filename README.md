@@ -95,7 +95,7 @@ Lite keeps orchestration and judging local by default.
 
 - Parallel panel runs across local CLIs and API adapters.
 - Local judge support for Codex, Claude, Gemini, Kimi, and Grok.
-- Optional OpenRouter and DeepSeek API adapters.
+- Optional OpenAI, OpenRouter, and DeepSeek API adapters.
 - Built-in panel presets for cheap exploration, research, code, and Fable-style review.
 - Fusion-style terminal report by default.
 - Machine-readable JSON output for automation.
@@ -142,6 +142,14 @@ Minimum useful setup for OpenRouter-backed panels:
 
 ```bash
 OPENROUTER_API_KEY=...
+```
+
+For OpenAI data-sharing/free-daily-token panels, use an API key from the
+project where data sharing is enabled:
+
+```bash
+OPENAI_API_KEY=...
+OPENAI_PROJECT=proj_...
 ```
 
 Recommended local setup:
@@ -247,6 +255,8 @@ returns.
 | --- | --- | --- |
 | `openrouter-budget` | Default low-cost analysis | OpenRouter diversity, local Claude -> Codex judge fallback |
 | `openrouter-thrift` | Cheapest exploration | Very low-cost OpenRouter voices |
+| `openai-free-daily` | Non-confidential OpenAI exploratory tests | GPT-5.4 mini/nano, o4-mini, and Codex mini through OpenAI API |
+| `openrouter-free-opinion` | Free OpenRouter exploratory critique | Free general/reasoning endpoints, excluding content-safety specialists |
 | `fable` | Stronger synthesis | Gemini 3 Flash and DeepSeek V4 Pro via OpenRouter, local Kimi, judged by Codex |
 | `hybrid-budget` | Mixed local/remote panel | OpenRouter budget voices plus optional local Codex and Claude |
 | `default` | Local-first review | Gemini, Kimi, Grok, optional DeepSeek, Claude judge |
@@ -356,6 +366,7 @@ Claude, so `--no-save` runs remain debuggable without digging through artifacts.
 | Adapter | Backing tool | Notes |
 | --- | --- | --- |
 | `openrouter_chat` | OpenRouter Chat Completions | Fixed official endpoint, needs `OPENROUTER_API_KEY` |
+| `openai_api` | OpenAI Responses API | Fixed official endpoint, needs `OPENAI_API_KEY`; use only non-confidential prompts when data sharing is enabled |
 | `codex_cli` | `codex exec ...` | Local CLI subscription |
 | `claude_cli` | `claude -p ...` | Local CLI subscription |
 | `gemini_cli` | `gemini -p ...` | Local CLI subscription |

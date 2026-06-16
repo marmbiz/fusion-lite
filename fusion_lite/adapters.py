@@ -16,6 +16,7 @@ from typing import Any
 
 
 DEEPSEEK_API_URL = "https://api.deepseek.com/chat/completions"
+OPENAI_RESPONSES_API_URL = "https://api.openai.com/v1/responses"
 OPENROUTER_API_URL = "https://openrouter.ai/api/v1/chat/completions"
 
 
@@ -47,6 +48,8 @@ def run_adapter(spec: dict[str, Any], prompt: str, work_dir: Path, timeout: int)
         return _run_codex_cli(spec, prompt, work_dir, timeout)
     if adapter == "deepseek_api":
         return _run_deepseek_api(spec, prompt, work_dir, timeout)
+    if adapter == "openai_api":
+        return _run_openai_api(spec, prompt, work_dir, timeout)
     if adapter == "openrouter_chat":
         return _run_openrouter_chat(spec, prompt, work_dir, timeout)
     return AdapterResult(
@@ -148,6 +151,8 @@ def render_command(spec: dict[str, Any], timeout: int) -> list[str]:
         return cmd
     if adapter == "deepseek_api":
         return ["POST", DEEPSEEK_API_URL]
+    if adapter == "openai_api":
+        return ["POST", OPENAI_RESPONSES_API_URL, str(spec.get("model") or "<model>")]
     if adapter == "openrouter_chat":
         return ["POST", OPENROUTER_API_URL, str(spec.get("model") or "<model>")]
     return [adapter]
@@ -431,6 +436,92 @@ def _run_openrouter_chat(spec: dict[str, Any], prompt: str, work_dir: Path, time
         command=["POST", OPENROUTER_API_URL, model],
         error=None if content else "empty OpenRouter response",
         usage=payload.get("usage") or {},
+        raw_json=payload,
+    )
+
+
+def _run_openai_api(spec: dict[str, Any], prompt: str, work_dir: Path, timeout: int) -> AdapterResult:
+    api_key = os.getenv("OPENAI_API_KEY")
+    started = time.monotonic()
+    if not api_key:
+        return AdapterResult(
+            id=str(spec.get("id") or spec["adapter"]),
+            adapter=str(spec["adapter"]),
+            model=spec.get("model"),
+            status="skipped" if spec.get("optional") else "error",
+            content="",
+            elapsed_seconds=0.0,
+            error="OPENAI_API_KEY is not set",
+        )
+
+    model = str(spec.get("model") or "gpt-4.1-mini")
+    body: dict[str, Any] = {
+        "model": model,
+        "instructions": "Answer independently. Do not mention other models. Do not use tools.",
+        "input": prompt,
+        "max_output_tokens": int(spec.get("max_tokens", 2500)),
+    }
+    if spec.get("temperature") is not None:
+        body["temperature"] = float(spec["temperature"])
+    if spec.get("reasoning") is not None:
+        body["reasoning"] = spec["reasoning"]
+
+    headers = {
+        "Authorization": f"Bearer {api_key}",
+        "Content-Type": "application/json",
+    }
+    organization = os.getenv("OPENAI_ORG_ID") or os.getenv("OPENAI_ORGANIZATION")
+    project = os.getenv("OPENAI_PROJECT") or os.getenv("OPENAI_PROJECT_ID")
+    if organization:
+        headers["OpenAI-Organization"] = organization
+    if project:
+        headers["OpenAI-Project"] = project
+
+    req = urllib.request.Request(
+        OPENAI_RESPONSES_API_URL,
+        data=json.dumps(body).encode("utf-8"),
+        headers=headers,
+        method="POST",
+    )
+    try:
+        with urllib.request.urlopen(req, timeout=timeout) as response:
+            payload = json.loads(response.read().decode("utf-8"))
+    except urllib.error.HTTPError as exc:
+        error_body = exc.read().decode("utf-8", errors="replace")[:2000]
+        return AdapterResult(
+            id=str(spec.get("id") or spec["adapter"]),
+            adapter=str(spec["adapter"]),
+            model=model,
+            status="error",
+            content="",
+            elapsed_seconds=time.monotonic() - started,
+            command=["POST", OPENAI_RESPONSES_API_URL, model],
+            error=f"HTTP {exc.code}: {error_body}",
+        )
+    except Exception as exc:  # noqa: BLE001 - adapter boundary should not crash the run
+        return AdapterResult(
+            id=str(spec.get("id") or spec["adapter"]),
+            adapter=str(spec["adapter"]),
+            model=model,
+            status="error",
+            content="",
+            elapsed_seconds=time.monotonic() - started,
+            command=["POST", OPENAI_RESPONSES_API_URL, model],
+            error=str(exc),
+        )
+
+    content = extract_openai_responses_text(payload)
+    served_model = str(payload.get("model") or model)
+    return AdapterResult(
+        id=str(spec.get("id") or spec["adapter"]),
+        adapter=str(spec["adapter"]),
+        model=served_model,
+        status="ok" if content else "error",
+        content=content,
+        elapsed_seconds=time.monotonic() - started,
+        command=["POST", OPENAI_RESPONSES_API_URL, model],
+        error=None if content else "empty OpenAI response",
+        usage=normalize_openai_responses_usage(payload.get("usage") or {}),
         raw_json=payload,
     )
 
@@ -734,6 +825,36 @@ def extract_openai_style_text(content: Any) -> str:
                     parts.append(str(item.get("text") or ""))
         return "".join(parts).strip()
     return str(content or "").strip()
+
+
+def extract_openai_responses_text(payload: dict[str, Any]) -> str:
+    direct = payload.get("output_text")
+    if isinstance(direct, str) and direct.strip():
+        return direct.strip()
+
+    parts: list[str] = []
+    for item in payload.get("output") or []:
+        if not isinstance(item, dict):
+            continue
+        for content in item.get("content") or []:
+            if not isinstance(content, dict):
+                continue
+            if content.get("type") in {"output_text", "text"} and content.get("text"):
+                parts.append(str(content["text"]))
+    return "".join(parts).strip()
+
+
+def normalize_openai_responses_usage(usage: dict[str, Any]) -> dict[str, Any]:
+    if not isinstance(usage, dict):
+        return {}
+    prompt_tokens = int(usage.get("input_tokens") or usage.get("prompt_tokens") or 0)
+    completion_tokens = int(usage.get("output_tokens") or usage.get("completion_tokens") or 0)
+    total_tokens = int(usage.get("total_tokens") or prompt_tokens + completion_tokens)
+    normalized = dict(usage)
+    normalized.setdefault("prompt_tokens", prompt_tokens)
+    normalized.setdefault("completion_tokens", completion_tokens)
+    normalized.setdefault("total_tokens", total_tokens)
+    return normalized
 
 
 def _extract_json_object(text: str) -> dict[str, Any] | None:

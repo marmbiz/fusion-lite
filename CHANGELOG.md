@@ -10,6 +10,8 @@
 - Add macOS to the CI matrix and make generated-artifact release checks explicit.
 - Prevent panel JSON from overriding OpenRouter/DeepSeek API endpoints, add panel schema validation, redact Codex prompts in command artifacts, and harden CI action pinning.
 - Restrict `.env` loading to known Fusion/provider keys instead of importing arbitrary process variables.
+- Add OpenAI Responses API support plus a non-confidential `openai-free-daily` panel for data-sharing/free-daily-token projects.
+- Add `openrouter-free-opinion` for exploratory critique using free OpenRouter general/reasoning endpoints.
 
 ## 0.1.0 - 2026-06-14
 
