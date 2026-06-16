@@ -255,7 +255,8 @@ returns.
 | --- | --- | --- |
 | `openrouter-budget` | Default low-cost analysis | OpenRouter diversity, local Claude -> Codex judge fallback |
 | `openrouter-thrift` | Cheapest exploration | Very low-cost OpenRouter voices |
-| `openai-free-daily` | Non-confidential OpenAI exploratory tests | GPT-5.4 mini/nano, o4-mini, and Codex mini through OpenAI API |
+| `openai-free-daily` | Non-confidential OpenAI quality tests | GPT-5.4, o3, and GPT-5.4 mini through OpenAI API |
+| `openai-free-daily-code` | Non-confidential code/repo reviews | `openai-free-daily` plus GPT-5.1 Codex mini |
 | `openrouter-free-opinion` | Free OpenRouter exploratory critique | Free general/reasoning endpoints, excluding content-safety specialists |
 | `fable` | Stronger synthesis | Gemini 3 Flash and DeepSeek V4 Pro via OpenRouter, local Kimi, judged by Codex |
 | `hybrid-budget` | Mixed local/remote panel | OpenRouter budget voices plus optional local Codex and Claude |

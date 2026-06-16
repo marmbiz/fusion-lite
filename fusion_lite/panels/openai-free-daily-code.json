@@ -1,7 +1,7 @@
 {
-  "name": "openai-free-daily",
-  "description": "OpenAI data-sharing/free-daily-token quality panel for non-confidential exploratory tests.",
-  "price_basis": "OpenAI data sharing incentive shown 2026-06-16: up to 250k daily tokens across GPT-5.4/o3-class models and 2.5M across mini models when enabled for the project.",
+  "name": "openai-free-daily-code",
+  "description": "OpenAI data-sharing/free-daily-token code/repo panel for non-confidential implementation reviews.",
+  "price_basis": "OpenAI data sharing incentive shown 2026-06-16: uses strong GPT/o-series voices plus Codex mini for code/repo-specific perspective.",
   "judge": "codex",
   "fallback_judge": "codex",
   "members": [
@@ -23,6 +23,13 @@
       "id": "openai_gpt_5_4_mini",
       "adapter": "openai_api",
       "model": "gpt-5.4-mini",
+      "max_tokens": 1000,
+      "timeout_seconds": 120
+    },
+    {
+      "id": "openai_gpt_5_1_codex_mini",
+      "adapter": "openai_api",
+      "model": "gpt-5.1-codex-mini",
       "max_tokens": 1000,
       "timeout_seconds": 120
     }

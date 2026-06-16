@@ -11,6 +11,7 @@
 - Prevent panel JSON from overriding OpenRouter/DeepSeek API endpoints, add panel schema validation, redact Codex prompts in command artifacts, and harden CI action pinning.
 - Restrict `.env` loading to known Fusion/provider keys instead of importing arbitrary process variables.
 - Add OpenAI Responses API support plus a non-confidential `openai-free-daily` panel for data-sharing/free-daily-token projects.
+- Make `openai-free-daily` quality-first with GPT-5.4, o3, and GPT-5.4 mini; add `openai-free-daily-code` for Codex-mini code/repo reviews.
 - Add `openrouter-free-opinion` for exploratory critique using free OpenRouter general/reasoning endpoints.
 
 ## 0.1.0 - 2026-06-14
